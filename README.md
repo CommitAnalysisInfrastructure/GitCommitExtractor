@@ -8,3 +8,6 @@ Git needs to be installed
 Operating system: all
 
 Version control system: "git"
+
+## Plug-in-specific Configuration Parameters
+None
