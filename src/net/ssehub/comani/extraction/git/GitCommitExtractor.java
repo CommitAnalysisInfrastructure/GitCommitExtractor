@@ -92,9 +92,24 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
     public GitCommitExtractor(Properties extractionProperties, IExtractionQueue commitQueue)
             throws ExtractionSetupException {
         super(extractionProperties, commitQueue);
-        // TODO check if git is installed and throw exception otherwise
-        processUtilities = ProcessUtilities.getInstance();
+        prepare();
         logger.log(ID, this.getClass().getName() + " created", null, MessageType.DEBUG);
+    }
+    
+    /**
+     * Prepares this extractor for execution, e.g., reading and setting the properties as well as creating required
+     * utilities.
+     * 
+     * @throws ExtractionSetupException if setting-up the necessary elements of this extractor failed
+     */
+    private void prepare() throws ExtractionSetupException {
+        processUtilities = ProcessUtilities.getInstance();
+        // Check if Git is installed and available
+        ExecutionResult executionResult = processUtilities.executeCommand("git --version", null);
+        if (!executionResult.executionSuccessful()) {
+            throw new ExtractionSetupException("Testing Git availability failed.\n" 
+                    + executionResult.getErrorOutputData());
+        }
     }
     
     /**
@@ -110,13 +125,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
             // We assume that the standard output stream of the process executed above contains the commit numbers
             commitNumbers = getCommitNumbers(executionResult.getStandardOutputData());
             extractionSuccessful = extract(commitNumbers, repository);
-        }        
-//        String[] executionResults = processUtilities.executeCommand(GIT_COMMITS_COMMAND, repository);
-//        if (executionResults != null) {
-//            // We assume that the standard output stream of the process executed above contains the commit numbers
-//            commitNumbers = getCommitNumbers(executionResults[0]);
-//            extractionSuccessful = extract(commitNumbers, repository);
-//        }
+        }
         return extractionSuccessful;
     }
 
@@ -160,7 +169,6 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
         if (commitNumbers != null) {
             String commitNumber = null;
             ExecutionResult executionResult = null;
-//            String[] executionResults = null;
             String committerDate = null;
             String commitContent = null;
             for (int i = 0; i < commitNumbers.length; i++) {
@@ -179,22 +187,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
                         repositoryDirectory);
                 if (executionResult.executionSuccessful()) {
                     commitContent = executionResult.getStandardOutputData();
-                }                
-//            executionResults = Utilities.getInstance().executeCommand(GIT_COMMITTER_DATE_COMMAND + " " + commitNumber,
-//                        repositoryDirectory);
-//                if (executionResults != null) {
-//                    committerDate = executionResults[0];
-//                }
-//            executionResults = Utilities.getInstance().executeCommand(GIT_COMMIT_CHANGES_COMMAND + " " + commitNumber,
-//                        repositoryDirectory);
-//                if (executionResults != null) {
-//                    commitContent = executionResults[0];
-//                }
-//                
-//                String committerDate = Utilities.executeCommand(GIT_COMMITTER_DATE_COMMAND + " " + commitNumber,
-//                        repositoryDirectory)[0];
-//                String commitContent = Utilities.executeCommand(GIT_COMMIT_CHANGES_COMMAND + " " + commitNumber,
-//                        repositoryDirectory)[0];
+                }
                 if (committerDate != null) {
                     if (commitContent != null) {                        
                         Commit commit = createCommit(commitNumber, committerDate, commitContent);
