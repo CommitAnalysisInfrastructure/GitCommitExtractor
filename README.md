@@ -16,6 +16,8 @@ Depending on the extraction variant, this extractor executes the following Git c
 - Operating system: all
 - Version control system: “git”
 
+For more information on how to use ComAnI and its plug-ins, we recommend reading the [ComAnI Guide](https://github.com/CommitAnalysisInfrastructure/ComAnI/blob/master/guide/ComAnI_Guide.pdf).
+
 ## Installation
 Download the [GitCommitExtractor.jar](/release/GitCommitExtractor.jar) file from the release directory and save it to the ComAnI plug-ins directory on your machine. This directory is the one specified as `core.plugins_dir` in the configuration file of a particular ComAnI instance.
 
