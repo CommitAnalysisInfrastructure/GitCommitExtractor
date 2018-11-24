@@ -41,22 +41,36 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
     private static final String ID = "GitCommitExtractor";
     
     /**
-     * The command for printing all commit numbers (SHAs) to console.
+     * The command for printing the installed Git version used to check whether Git is installed during 
+     * {@link #prepare()}.<br>
+     * <br>
+     * Command: <code>git --version</code>
      */
-    private static final String GIT_COMMITS_COMMAND = "git log --oneline";
+    private static final String[] GIT_VERSION_COMMAND = {"git", "--version"};
+    
+    /**
+     * The command for printing all commit numbers (SHAs) to console.<br>
+     * <br>
+     * Command: <code>git log --oneline</code>
+     */
+    private static final String[] GIT_COMMITS_COMMAND = {"git", "log", "--oneline"};
     
     /**
      * The constant part of the command for printing the committer date to console. The number of the commit, for which
-     * the committer date shall be printed, must be appended with an additional whitespace as prefix. 
+     * the committer date shall be printed, must be appended with an additional whitespace as prefix.<br>
+     * <br>
+     * Command: <code>git show -s --format=%ci</code> 
      */
-    private static final String GIT_COMMITTER_DATE_COMMAND = "git show -s --format=%ci";
+    private static final String[] GIT_COMMITTER_DATE_COMMAND = {"git", "show", "-s", "--format=%ci"};
     
     /**
      * The constant part of the command for printing the entire commit information, the content of the changed files
      * (100.000 lines of context including renamed files), and the changes to console. The number of the commit, for
-     * which this information shall be printed, must be appended with an additional whitespace as prefix. 
+     * which this information shall be printed, must be appended with an additional whitespace as prefix.<br>
+     * <br>
+     * Command: <code>git show -U100000 --no-renames</code>
      */
-    private static final String GIT_COMMIT_CHANGES_COMMAND = "git show -U100000 --no-renames";
+    private static final String[] GIT_COMMIT_CHANGES_COMMAND = {"git", "show", "-U100000", "--no-renames"};
     
     /**
      * The string identifying the start of a diff header in a commit. The first line of the diff header starts with this
@@ -105,7 +119,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
     private void prepare() throws ExtractionSetupException {
         processUtilities = ProcessUtilities.getInstance();
         // Check if Git is installed and available
-        ExecutionResult executionResult = processUtilities.executeCommand("git --version", null);
+        ExecutionResult executionResult = processUtilities.executeCommand(GIT_VERSION_COMMAND, null);
         if (!executionResult.executionSuccessful()) {
             throw new ExtractionSetupException("Testing Git availability failed.\n" 
                     + executionResult.getErrorOutputData());
@@ -168,6 +182,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
         boolean extractionSuccessful = false;
         if (commitNumbers != null) {
             String commitNumber = null;
+            String[] command = null;
             ExecutionResult executionResult = null;
             String committerDate = null;
             String commitContent = null;
@@ -178,13 +193,13 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
                  * We assume that the standard output streams of the processes executed below contain the commit date
                  * and content.
                  */
-                executionResult = processUtilities.executeCommand(GIT_COMMITTER_DATE_COMMAND + " " + commitNumber,
-                        repositoryDirectory);
+                command = processUtilities.extendCommand(GIT_COMMITTER_DATE_COMMAND, commitNumber);
+                executionResult = processUtilities.executeCommand(command, repositoryDirectory);
                 if (executionResult.executionSuccessful()) {
                     committerDate = executionResult.getStandardOutputData();
                 }
-                executionResult = processUtilities.executeCommand(GIT_COMMIT_CHANGES_COMMAND + " " + commitNumber,
-                        repositoryDirectory);
+                command = processUtilities.extendCommand(GIT_COMMIT_CHANGES_COMMAND, commitNumber);
+                executionResult = processUtilities.executeCommand(command, repositoryDirectory);
                 if (executionResult.executionSuccessful()) {
                     commitContent = executionResult.getStandardOutputData();
                 }
