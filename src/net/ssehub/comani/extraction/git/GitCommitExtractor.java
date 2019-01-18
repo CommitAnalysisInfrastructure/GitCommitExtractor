@@ -353,27 +353,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
         }
         return index;
     }
-    
-//    /**
-//     * Extracts the commit numbers (SHAs) from the given commit log as returned by the {@link #GIT_COMMITS_COMMAND}
-//     * command.
-//     * 
-//     * @param commitLog the string containing the commit log
-//     * @return the set of commit numbers as provided as part of the commit log
-//     */
-//    private String[] getCommitNumbers(String commitLog) {
-//        logger.log(ID, "Extracting commit numbers from log", null, MessageType.DEBUG);
-//        String[] commitNumbers = null;
-//        if (commitLog != null && !commitLog.isEmpty()) {
-//            String[] commitLogLines = commitLog.split("\n");
-//            commitNumbers = new String[commitLogLines.length];
-//            for (int i = 0; i < commitLogLines.length; i++) {
-//                commitNumbers[i] = commitLogLines[i].substring(0, commitLogLines[i].indexOf(" "));
-//            }
-//        }
-//        return commitNumbers;
-//    }
-    
+       
     /**
      * Extracts the commit numbers (SHAs) from the commit log as returned by the {@link #GIT_COMMITS_COMMAND} command,
      * which this method executes at the location of the given repository.
