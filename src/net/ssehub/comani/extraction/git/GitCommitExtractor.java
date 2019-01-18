@@ -51,9 +51,9 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
     /**
      * The command for printing all commit numbers (SHAs) to console.<br>
      * <br>
-     * Command: <code>git log --oneline</code>
+     * Command: <code>git log --pretty=format:"%h"</code>
      */
-    private static final String[] GIT_COMMITS_COMMAND = {"git", "log", "--oneline"};
+    private static final String[] GIT_COMMITS_COMMAND = {"git", "log", "--pretty=format:\"%h\""};
     
     /**
      * The constant part of the command for printing the committer date to console. The number of the commit, for which
@@ -133,11 +133,8 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
     public boolean extract(File repository) {
         logger.log(ID, "Full extraction of all available commits in repository", null, MessageType.DEBUG);
         boolean extractionSuccessful = false;
-        String[] commitNumbers;
-        ExecutionResult executionResult = processUtilities.executeCommand(GIT_COMMITS_COMMAND, repository);
-        if (executionResult.executionSuccessful()) {
-            // We assume that the standard output stream of the process executed above contains the commit numbers
-            commitNumbers = getCommitNumbers(executionResult.getStandardOutputData());
+        String[] commitNumbers = getCommitNumbers(repository);
+        if (commitNumbers != null) {
             extractionSuccessful = extract(commitNumbers, repository);
         }
         return extractionSuccessful;
@@ -183,7 +180,6 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
         if (commitNumbers != null) {
             String commitNumber = null;
             String[] command = null;
-            ExecutionResult executionResult = null;
             String committerDate = null;
             String commitContent = null;
             for (int i = 0; i < commitNumbers.length; i++) {
@@ -194,15 +190,11 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
                  * and content.
                  */
                 command = processUtilities.extendCommand(GIT_COMMITTER_DATE_COMMAND, commitNumber);
-                executionResult = processUtilities.executeCommand(command, repositoryDirectory);
-                if (executionResult.executionSuccessful()) {
-                    committerDate = executionResult.getStandardOutputData();
-                }
+                committerDate = getCommitInformation(command, repositoryDirectory);
+
                 command = processUtilities.extendCommand(GIT_COMMIT_CHANGES_COMMAND, commitNumber);
-                executionResult = processUtilities.executeCommand(command, repositoryDirectory);
-                if (executionResult.executionSuccessful()) {
-                    commitContent = executionResult.getStandardOutputData();
-                }
+                commitContent = getCommitInformation(command, repositoryDirectory);
+
                 if (committerDate != null) {
                     if (commitContent != null) {                        
                         Commit commit = createCommit(commitNumber, committerDate, commitContent);
@@ -224,6 +216,23 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
     }
     
     /**
+     * Retrieves commit information by executing the given command in the given working directory.
+     * 
+     * @param command the command to be executed to retrieve the desired commit information
+     * @param workingDirectory the directory in which the process with the given command shall be executed
+     * @return the commit information as provided by the standard output stream of the process executing the given
+     *         command or <code>null</code>, if the execution was not successful
+     */
+    private String getCommitInformation(String[] command, File workingDirectory) {
+        String commitInformation = null;
+        ExecutionResult executionResult = processUtilities.executeCommand(command, workingDirectory);
+        if (executionResult.executionSuccessful()) {
+            commitInformation = executionResult.getStandardOutputData();
+        }
+        return commitInformation;
+    }
+    
+    /**
      * Creates a new {@link Commit} based on the given committer date and commit content.
      * 
      * @param commitNumber the commit numbers (SHAs) of the commit to be created
@@ -233,7 +242,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
      */
     private Commit createCommit(String commitNumber, String committerDate, String commitContent) {
         logger.log(ID, "Creating commit object for commit " + commitNumber, null, MessageType.DEBUG);
-        String[] commitContentLines = commitContent.split("\n");
+        String[] commitContentLines = commitContent.split("\n", -1);
         int linesCounter = getIndexLineStartsWith(commitContentLines, DIFF_HEADER_START_PATTERN);
         String[] commitHeader = null;
         List<ChangedArtifact> changedArtifacts = null;
@@ -345,22 +354,50 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
         return index;
     }
     
+//    /**
+//     * Extracts the commit numbers (SHAs) from the given commit log as returned by the {@link #GIT_COMMITS_COMMAND}
+//     * command.
+//     * 
+//     * @param commitLog the string containing the commit log
+//     * @return the set of commit numbers as provided as part of the commit log
+//     */
+//    private String[] getCommitNumbers(String commitLog) {
+//        logger.log(ID, "Extracting commit numbers from log", null, MessageType.DEBUG);
+//        String[] commitNumbers = null;
+//        if (commitLog != null && !commitLog.isEmpty()) {
+//            String[] commitLogLines = commitLog.split("\n");
+//            commitNumbers = new String[commitLogLines.length];
+//            for (int i = 0; i < commitLogLines.length; i++) {
+//                commitNumbers[i] = commitLogLines[i].substring(0, commitLogLines[i].indexOf(" "));
+//            }
+//        }
+//        return commitNumbers;
+//    }
+    
     /**
-     * Extracts the commit numbers (SHAs) from the given commit log as returned by the {@link #GIT_COMMITS_COMMAND}
-     * command.
+     * Extracts the commit numbers (SHAs) from the commit log as returned by the {@link #GIT_COMMITS_COMMAND} command,
+     * which this method executes at the location of the given repository.
      * 
-     * @param commitLog the string containing the commit log
-     * @return the set of commit numbers as provided as part of the commit log
+     * @param repository the {@link File} representing the repository directory; never <code>null</code> and always a
+     *        directory
+     * @return the set of commit numbers or <code>null</code>, if extracting the commit numbers failed
      */
-    private String[] getCommitNumbers(String commitLog) {
+    private String[] getCommitNumbers(File repository) {
         logger.log(ID, "Extracting commit numbers from log", null, MessageType.DEBUG);
         String[] commitNumbers = null;
-        if (commitLog != null && !commitLog.isEmpty()) {
-            String[] commitLogLines = commitLog.split("\n");
-            commitNumbers = new String[commitLogLines.length];
-            for (int i = 0; i < commitLogLines.length; i++) {
-                commitNumbers[i] = commitLogLines[i].substring(0, commitLogLines[i].indexOf(" "));
+        ExecutionResult executionResult = processUtilities.executeCommand(GIT_COMMITS_COMMAND, repository);
+        if (executionResult.executionSuccessful()) {
+            // We assume that the standard output stream of the process executed above contains the commit numbers
+            String commitLog = executionResult.getStandardOutputData();
+            if (commitLog != null && !commitLog.isEmpty()) {
+                commitNumbers = commitLog.split("\n");
+            } else {
+                logger.log(ID, "Commit log is empty", "No commit numbers to extract", MessageType.ERROR);
             }
+        } else {
+            logger.log(ID, "Extracting the available commit numbers failed", "Executing the command \"" 
+                    + processUtilities.getCommandString(GIT_COMMITS_COMMAND) + "\" was not successful: " 
+                    + executionResult.getErrorOutputData(), MessageType.ERROR);
         }
         return commitNumbers;
     }
