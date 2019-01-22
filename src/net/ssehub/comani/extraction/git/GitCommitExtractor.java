@@ -158,12 +158,33 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
     public boolean extract(String commit) {
         logger.log(ID, "Extraction (parsing) of single commit", null, MessageType.DEBUG);
         boolean extractionSuccessful = false;
-        Commit commitObject = createCommit("<no_id>", "<no_date>", commit);
-        if (commitObject != null) {
-            while (!commitQueue.addCommit(commitObject)) {
-                logger.log(ID, "Waiting to add commit to queue", null, MessageType.DEBUG);
+        // Get the commit id from the first line of the given commit string
+        String commitId = null;
+        if (commit.startsWith("commit ")) {
+            int commitIdStartIndex = commit.indexOf(" ") + 1;
+            int commitIdEndIndex = commitIdStartIndex;
+            int indexCounter = commitIdStartIndex + 1;
+            while (commitIdEndIndex == commitIdStartIndex && indexCounter < commit.length()) {
+                char commitCharAtIndex = commit.charAt(indexCounter);
+                if (commitCharAtIndex == ' ' || commitCharAtIndex == '\n') {
+                    commitIdEndIndex = indexCounter;
+                }
+                indexCounter++;
             }
-            extractionSuccessful = true;
+            commitId = commit.substring(commitIdStartIndex, commitIdEndIndex);
+        }
+        // Create the commit object
+        if (commitId != null && !commitId.isEmpty()) {            
+            Commit commitObject = createCommit(commitId, "<no_date>", commit);
+            if (commitObject != null) {
+                while (!commitQueue.addCommit(commitObject)) {
+                    logger.log(ID, "Waiting to add commit to queue", null, MessageType.DEBUG);
+                }
+                extractionSuccessful = true;
+            }
+        } else {
+            logger.log(ID, "Identifying the commit id failed",
+                    "The given string does not start with \"commit <ID> ...\"", MessageType.ERROR);
         }
         return extractionSuccessful;
     }
