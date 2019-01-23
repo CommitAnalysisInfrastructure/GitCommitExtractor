@@ -166,7 +166,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
             int indexCounter = commitIdStartIndex + 1;
             while (commitIdEndIndex == commitIdStartIndex && indexCounter < commit.length()) {
                 char commitCharAtIndex = commit.charAt(indexCounter);
-                if (commitCharAtIndex == ' ' || commitCharAtIndex == '\n') {
+                if (commitCharAtIndex == ' ' || commitCharAtIndex == '\n' || indexCounter + 1 == commit.length()) {
                     commitIdEndIndex = indexCounter;
                 }
                 indexCounter++;
