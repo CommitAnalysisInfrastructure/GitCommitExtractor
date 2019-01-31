@@ -30,7 +30,7 @@ import net.ssehub.comani.utility.ProcessUtilities.ExecutionResult;
 /**
  * The main class of this extractor. It extracts commits from Git repositories on any platform.
  * 
- * @author Christian Kröher
+ * @author Christian Kroeher
  *
  */
 public class GitCommitExtractor extends AbstractCommitExtractor {
