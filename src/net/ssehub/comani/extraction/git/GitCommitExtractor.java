@@ -391,6 +391,13 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
             // We assume that the standard output stream of the process executed above contains the commit numbers
             String commitLog = executionResult.getStandardOutputData();
             if (commitLog != null && !commitLog.isEmpty()) {
+                /*
+                 * On Linux/OpenJDK-10.0.2 the individual commit numbers are surrounded by additional quotation marks
+                 * while reading the InputStream of the executed command above. These additional marks result in an
+                 * error, if they are used in further commands, like for retrieving the committer date. Hence, we need
+                 * to ensure here that these quotation marks are not present in the result of this method.    
+                 */
+                commitLog = commitLog.replaceAll("\"", "");
                 commitNumbers = commitLog.split("\n");
             } else {
                 logger.log(ID, "Commit log is empty", "No commit numbers to extract", MessageType.ERROR);
