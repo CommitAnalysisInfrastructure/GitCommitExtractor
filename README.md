@@ -34,6 +34,34 @@ This plug-in is not a standalone tool, but only executable as the extractor of a
 
 None
 
+*Single commit extraction:*
+
+The ComAnI infrastructure offers the single commit extraction as one of three different extraction variants (read the [ComAnI Guide](https://github.com/CommitAnalysisInfrastructure/ComAnI/blob/master/guide/ComAnI_Guide.pdf)). When using the GitCommitExtractor, the required format of the string representing the single commit must be as illustrated by the following example:
+
+```
+commit 0123456789987654321001234567899876543210
+Author: Some One <some@one.mail>
+Date:   Fri Mar 8 19:32:34 2019 -????
+
+    A commit message.
+
+diff --git a/some/path/readme.txt b/some/path/readme.txt
+index 030745d5ab..504d71b4f5 100644
+--- a/some/path/readme.txt
++++ b/some/path/readme.txt
+@@ -1,5 +1,5 @@
+ This repository hosts some files to check whether the GitCommitExtractor works as expected.
++These files neither represent a particular software nor do they have any relations.
+-These files are only used for testing correct extraction of commits.
+
+ This line was introduced on a new branch.
+!q!
+```
+
+The example above shows the content of a commit as provided by the Git command `git show –U100000 <SHA>`, where `<SHA>` identifies the respective commit (the commit number). Note that the first line starts with `commit <SHA>`, which is required by the commit extractor to identify the commit id. If this line does not exist, the commit extractor throws an error and stops without further processing the given string.
+
+The last line terminates the commit string as required by the infrastructure. This line must only contain `!q!`. All lines after this termination-string will be ignored.
+
 ## License
 This project is licensed under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html).
 
