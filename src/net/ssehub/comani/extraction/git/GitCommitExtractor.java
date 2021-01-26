@@ -121,7 +121,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
         // Check if Git is installed and available
         ExecutionResult executionResult = processUtilities.executeCommand(GIT_VERSION_COMMAND, null);
         if (!executionResult.executionSuccessful()) {
-            throw new ExtractionSetupException("Testing Git availability failed.\n" 
+            throw new ExtractionSetupException("Testing Git availability failed." + System.lineSeparator() 
                     + executionResult.getErrorOutputData());
         }
     }
@@ -166,7 +166,8 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
             int indexCounter = commitIdStartIndex + 1;
             while (commitIdEndIndex == commitIdStartIndex && indexCounter < commit.length()) {
                 char commitCharAtIndex = commit.charAt(indexCounter);
-                if (commitCharAtIndex == ' ' || commitCharAtIndex == '\n' || indexCounter + 1 == commit.length()) {
+                if (commitCharAtIndex == ' ' || System.lineSeparator().startsWith(String.valueOf(commitCharAtIndex))
+                        || indexCounter + 1 == commit.length()) {
                     commitIdEndIndex = indexCounter;
                 }
                 indexCounter++;
@@ -263,7 +264,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
      */
     private Commit createCommit(String commitNumber, String committerDate, String commitContent) {
         logger.log(ID, "Creating commit object for commit " + commitNumber, null, MessageType.DEBUG);
-        String[] commitContentLines = commitContent.split("\n", -1);
+        String[] commitContentLines = commitContent.split(System.lineSeparator(), -1);
         int linesCounter = getIndexLineStartsWith(commitContentLines, DIFF_HEADER_START_PATTERN);
         String[] commitHeader = null;
         List<ChangedArtifact> changedArtifacts = null;
@@ -391,7 +392,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
             // We assume that the standard output stream of the process executed above contains the commit numbers
             String commitLog = executionResult.getStandardOutputData();
             if (commitLog != null && !commitLog.isEmpty()) {
-                commitNumbers = commitLog.split("\n");
+                commitNumbers = commitLog.split(System.lineSeparator());
             } else {
                 logger.log(ID, "Commit log is empty", "No commit numbers to extract", MessageType.ERROR);
             }
