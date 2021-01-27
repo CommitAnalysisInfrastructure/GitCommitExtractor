@@ -97,7 +97,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
      * Constructs a new instance of this extractor, which extracts commits from Git repositories on any platform.
      * 
      * @param extractionProperties the properties of the properties file defining the extraction process and the
-     *        configuration of the extractor in use; all properties, which start with the prefix "<tt>extraction.</tt>"
+     *        configuration of the extractor in use; all properties, which start with the prefix "<i>extraction.</i>"
      *        as well as the properties defining the operating system and the version control system
      * @param commitQueue the {@link IExtractionQueue} for transferring commits from an extractor to an analyzer
      * @throws ExtractionSetupException if the extractor is not supporting the current operating or version control
@@ -359,7 +359,7 @@ public class GitCommitExtractor extends AbstractCommitExtractor {
      * 
      * @param lines the array of lines in which the first line starting with the given pattern shall be found
      * @param pattern the pattern with which a particular line in the array shall be found
-     * @return the index of the first line (string) in the given array or <tt>-1</tt> if no line starts with the given
+     * @return the index of the first line (string) in the given array or <i>-1</i> if no line starts with the given
      *         pattern
      */
     private int getIndexLineStartsWith(String[] lines, String pattern) {
